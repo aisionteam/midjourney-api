@@ -32,6 +32,7 @@ export const processTask = async (task: TaskInterface) => {
     });
 
     task.result = Imagine ? Imagine : {};
+    task.percentage = '100%';
     task.status = "finished";
 
     await task.save();
