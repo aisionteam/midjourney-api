@@ -28,9 +28,14 @@ router.get("/:uuid", async (req: Request, res: Response) => {
     }
 
     if (task.result) {
-        const { uri } = task.result
-        task.uri = uri;
-        delete task.result;
+        if (task.command == "describe") {
+            task.descriptions = task.result.descriptions;
+            delete task.result;
+        } else {
+            const { uri } = task.result
+            task.uri = uri;
+            delete task.result;
+        }
     }
     return res.json(task);
 });

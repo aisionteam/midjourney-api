@@ -26,7 +26,7 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             required: true,
             default: "imagine",
-            enum: ["imagine", "describe", "variation", "upscale"],
+            enum: ["imagine", "describe", "variation", "upscale", "zoomout"],
         },
         result: {
             type: Object,
@@ -36,7 +36,7 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             required: true,
             default: "initialized",
-            enum: ["initialized", "waiting", "finished"],
+            enum: ["initialized", "waiting", "completed"],
         },
         error: {
             type: String,
