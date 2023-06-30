@@ -27,7 +27,7 @@ export const processTask = async (task: TaskInterface) => {
         const Imagine = await client.Imagine(
             task.prompt,
             (uri: string, progress: string) => {
-                console.log("***** Imagine.loading", uri, "progress", progress);
+                // console.log("***** Imagine.loading", uri, "progress", progress);
             }
         ).catch((err) => {
             console.error(`imagine error ${err}`)
@@ -57,7 +57,7 @@ export const processTask = async (task: TaskInterface) => {
                 hash: <string>Imagine.hash,
                 flags: Imagine.flags,
                 loading: (uri: string, progress: string) => {
-                    console.log("loading", uri, "progress", progress);
+                    // console.log("loading", uri, "progress", progress);
                 },
             }).catch((err) => {
                 console.error(`Upscale error ${err}`)
@@ -82,7 +82,7 @@ export const processTask = async (task: TaskInterface) => {
                 hash: <string>Imagine.hash,
                 flags: Imagine.flags,
                 loading: (uri: string, progress: string) => {
-                    console.log("loading", uri, "progress", progress);
+                    // console.log("loading", uri, "progress", progress);
                 },
             }).catch((err) => {
                 console.error(`Variation error ${err}`)
@@ -107,7 +107,7 @@ export const processTask = async (task: TaskInterface) => {
                 hash: <string>Upscale.hash,
                 flags: Upscale.flags,
                 loading: (uri: string, progress: string) => {
-                    console.log("Zoomout loading", uri, "progress", progress);
+                    // console.log("Zoomout loading", uri, "progress", progress);
                 },
             }).catch((err) => {
                 console.error(`Zoomout error ${err}`)

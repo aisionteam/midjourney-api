@@ -20,24 +20,29 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.get("/:uuid", async (req: Request, res: Response) => {
-    const uuid = req.params.uuid;
-    const task: any = await Task.findOne({ uuid }).lean();
+    try {
+        const uuid = req.params.uuid;
+        const task: any = await Task.findOne({ uuid }).lean();
 
-    if (!task) {
-        return res.status(404).json({ message: "Not found" });
-    }
-
-    if (task.result) {
-        if (task.command == "describe") {
-            task.descriptions = task.result.descriptions;
-            delete task.result;
-        } else {
-            const { uri } = task.result
-            task.uri = uri;
-            delete task.result;
+        if (!task) {
+            return res.status(404).json({ message: "Not found" });
         }
+
+        if (task.result) {
+            if (task.command == "describe") {
+                task.descriptions = task.result.descriptions;
+                delete task.result;
+            } else {
+                const { uri } = task.result
+                task.uri = uri;
+                delete task.result;
+            }
+        }
+        return res.json(task);
+    } catch (error) {
+        console.error("server error", error)
+        return res.status(500).json({ message: "Internal server error" });
     }
-    return res.json(task);
 });
 
 export default router;
