@@ -32,7 +32,7 @@ export class Midjourney extends MidjourneyMessage {
     return new Promise<Midjourney>((resolve) => {
       this.wsClient = new WsMessage(this.config, this.MJApi, updatefnc);
       this.wsClient.once("ready", () => {
-        this.log(`ws ready`);
+        // this.log(`ws ready`);
         resolve(this);
       });
     });
@@ -48,7 +48,7 @@ export class Midjourney extends MidjourneyMessage {
     }
 
     const nonce = nextNonce();
-    this.log(`Imagine`, prompt, "nonce", nonce);
+    // this.log(`Imagine`, prompt, "nonce", nonce);
     const httpStatus = await this.MJApi.ImagineApi(prompt, nonce);
     if (httpStatus !== 204) {
       throw new Error(`ImagineApi failed with status ${httpStatus}`);

@@ -1,17 +1,21 @@
 import express, { Request, Response } from 'express';
 
 import Task, { TaskInterface } from '../models/task.model';
+import User, { UserInterface } from '../models/user.model';
 import { processTask } from "../utils/task.utils"
+import { AuthenticatedRequest, authenticateToken } from "../middlewares/auth.middlewares"
 
 const router = express.Router();
 
-router.post("/", async (req: Request, res: Response) => {
-    const prompt = req.body.prompt;
+router.post("/", authenticateToken, async (req: any, res: Response) => {
+    const prompt = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
+    const user: UserInterface = req.user;
     const newTask: TaskInterface = new Task({
         prompt: prompt,
         command: command,
         status: "waiting",
+        user: user,
     });
 
     await newTask.save();

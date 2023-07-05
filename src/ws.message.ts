@@ -56,7 +56,7 @@ export class WsMessage {
   // After opening ws
   private async open() {
     const num = this.reconnectTime.length;
-    this.log("open.time", num);
+    // this.log("open.time", num);
     this.reconnectTime.push(false);
     this.auth();
     this.ws.addEventListener("message", (event) => {
@@ -95,12 +95,12 @@ export class WsMessage {
     const { embeds, id, nonce, components, attachments } = message;
 
     if (nonce) {
-      this.log("waiting start image or info or error");
+      // this.log("waiting start image or info or error");
       this.updateMjEventIdByNonce(id, nonce);
 
       if (embeds?.[0]) {
         const { color, description, title } = embeds[0];
-        this.log("embeds[0].color", color);
+        // this.log("embeds[0].color", color);
         switch (color) {
           case 16711680: //error
             const error = new Error(description);
@@ -210,7 +210,7 @@ export class WsMessage {
     const { channel_id, content, id, nonce, author } = message;
     if (!(author && author.id === this.MJBotId)) return;
     if (channel_id !== this.config.ChannelId) return;
-    this.log("has message", msg.t, content, nonce, id);
+    // this.log("has message", msg.t, content, nonce, id);
 
     if (msg.t === "MESSAGE_CREATE") {
       this.messageCreate(message);
@@ -301,7 +301,7 @@ export class WsMessage {
   private filterMessages(MJmsg: MJMessage) {
     const event = this.getEventByContent(MJmsg.content);
     if (!event) {
-      this.log("FilterMessages not found", MJmsg, this.waitMjEvents);
+      // this.log("FilterMessages not found", MJmsg, this.waitMjEvents);
       return;
     }
     const eventMsg: WsEventMsg = {
@@ -330,7 +330,7 @@ export class WsMessage {
     let event = this.waitMjEvents.get(nonce);
     if (!event) return;
     event.id = id;
-    this.log("updateMjEventIdByNonce success", this.waitMjEvents.get(nonce));
+    // this.log("updateMjEventIdByNonce success", this.waitMjEvents.get(nonce));
   }
   uriToHash(uri: string) {
     return uri.split("_").pop()?.split(".")[0] ?? "";

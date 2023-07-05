@@ -30,6 +30,8 @@ export const processTask = async (task: TaskInterface) => {
                 // console.log("***** Imagine.loading", uri, "progress", progress);
             }
         ).catch((err) => {
+            task.error = err;
+            task.save();
             console.error(`imagine error ${err}`)
             return;
         });
@@ -39,7 +41,9 @@ export const processTask = async (task: TaskInterface) => {
         task.status = "completed";
     } else if (task.command === "describe") {
         const Describe = await client.Describe(task.prompt).catch((err) => {
-            console.error(`imagine error ${err}`)
+            task.error = err;
+            task.save();
+            console.error(`describe error ${err}`)
             return;
         });
 
@@ -60,14 +64,18 @@ export const processTask = async (task: TaskInterface) => {
                     // console.log("loading", uri, "progress", progress);
                 },
             }).catch((err) => {
-                console.error(`Upscale error ${err}`)
+                task.error = err;
+                task.save();
+                console.error(`upscale error ${err}`)
                 return;
             });
 
             task.result = Upscale ? Upscale : {};
             task.percentage = '100%';
             task.status = "completed";
-        } catch (err) {
+        } catch (err: any) {
+            task.error = err;
+            task.save();
             console.error(`upscale error ${err}`)
             return;
         }
@@ -85,15 +93,19 @@ export const processTask = async (task: TaskInterface) => {
                     // console.log("loading", uri, "progress", progress);
                 },
             }).catch((err) => {
-                console.error(`Variation error ${err}`)
+                task.error = err;
+                task.save();
+                console.error(`variation error ${err}`)
                 return;
             });
 
             task.result = Variation ? Variation : {};
             task.percentage = '100%';
             task.status = "completed";
-        } catch (err) {
-            console.error(`Variation error ${err}`)
+        } catch (err: any) {
+            task.error = err;
+            task.save();
+            console.error(`variation error ${err}`)
             return;
         }
     } else if (task.command === "zoomout") {
@@ -110,15 +122,19 @@ export const processTask = async (task: TaskInterface) => {
                     // console.log("Zoomout loading", uri, "progress", progress);
                 },
             }).catch((err) => {
-                console.error(`Zoomout error ${err}`)
+                task.error = err;
+                task.save();
+                console.error(`zoomout error ${err}`)
                 return;
             });
 
             task.result = Zoomout ? Zoomout : {};
             task.percentage = '100%';
             task.status = "completed";
-        } catch (err) {
-            console.error(`Zoomout error ${err}`)
+        } catch (err: any) {
+            task.error = err;
+            task.save();
+            console.error(`zoomout error ${err}`)
             return;
         }
     }

@@ -1,14 +1,16 @@
-import { model } from "mongoose";
+import { model, Schema } from "mongoose";
 import { BaseDocumentInterface, BaseDocumentSchema } from "./base.model";
 import { v4 as uuid4 } from 'uuid';
+import User from "./user.model";
 
 export interface TaskInterface extends BaseDocumentInterface {
     uuid?: string,
+    user?: Schema.Types.ObjectId, // Foreign key reference to the User model
     prompt: string,
     command: string,
     result: Object,
     status: string,
-    error: string,
+    error: Object,
     message: string,
     percentage?: string,
 }
@@ -17,6 +19,11 @@ const TaskSchema = new BaseDocumentSchema(
     {
         uuid: {
             type: String,
+        },
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: User, // Reference to the User model
+            // required: true,
         },
         prompt: {
             type: String,
@@ -39,7 +46,7 @@ const TaskSchema = new BaseDocumentSchema(
             enum: ["initialized", "waiting", "completed"],
         },
         error: {
-            type: String,
+            type: Object,
             trim: true,
         },
         message: {

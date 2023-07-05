@@ -1,6 +1,7 @@
-import User from '../models/user.model';
+import User, { UserInterface } from '../models/user.model';
+import { Request, Response } from "express";
 
-export async function authenticateToken(req: any, res: any, next: any) {
+export async function authenticateToken(req: any, res: Response, next: any) {
     const token = req.headers.authorization;
 
     if (!token) {
@@ -20,3 +21,8 @@ export async function authenticateToken(req: any, res: any, next: any) {
     }
 
 }
+
+export interface AuthenticatedRequest extends Request {
+    user: UserInterface;
+}
+
