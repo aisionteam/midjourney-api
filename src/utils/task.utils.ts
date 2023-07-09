@@ -28,122 +28,127 @@ export const processTask = async (task: TaskInterface) => {
     }
 
     await client.Connect(update);
-    if (task.command === "imagine") {
-        const Imagine = await client.Imagine(
-            task.prompt,
-            (uri: string, progress: string) => {
-                // console.log("***** Imagine.loading", uri, "progress", progress);
-            }
-        ).catch((err) => {
-            task.error = err;
-            task.save();
-            console.error(`imagine error ${err}`)
-            return;
-        });
+    try {
+        if (task.command === "imagine") {
+            const Imagine = await client.Imagine(
+                task.prompt,
+                (uri: string, progress: string) => {
+                    // console.log("***** Imagine.loading", uri, "progress", progress);
+                }
+            ).catch((err) => {
+                task.error = err;
+                task.save();
+                console.error(`imagine error ${err}`)
+                return;
+            });
 
-        task.result = Imagine ? Imagine : {};
-        task.percentage = "100%";
-        task.status = "completed";
-    } else if (task.command === "describe") {
-        const Describe = await client.Describe(task.prompt).catch((err) => {
-            task.error = err;
-            task.save();
-            console.error(`describe error ${err}`)
-            return;
-        });
+            task.result = Imagine ? Imagine : {};
+            task.percentage = "100%";
+            task.status = "completed";
+        } else if (task.command === "describe") {
+            const Describe = await client.Describe(task.prompt).catch((err) => {
+                task.error = err;
+                task.save();
+                console.error(`describe error ${err}`)
+                return;
+            });
 
-        task.result = Describe ? Describe : {};
-        task.percentage = '100%';
-        task.status = "completed";
-    } else if (task.command === "upscale") {
-        try {
-            const req_prompt = JSON.parse(task.prompt);
-            const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
-            const Imagine = req_task.result;
-            const Upscale = await client.Upscale({
-                index: req_prompt.position,
-                msgId: <string>Imagine.id,
-                hash: <string>Imagine.hash,
-                flags: Imagine.flags,
-                loading: (uri: string, progress: string) => {
-                    // console.log("loading", uri, "progress", progress);
-                },
-            }).catch((err) => {
+            task.result = Describe ? Describe : {};
+            task.percentage = '100%';
+            task.status = "completed";
+        } else if (task.command === "upscale") {
+            try {
+                const req_prompt = JSON.parse(task.prompt);
+                const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
+                const Imagine = req_task.result;
+                const Upscale = await client.Upscale({
+                    index: req_prompt.position,
+                    msgId: <string>Imagine.id,
+                    hash: <string>Imagine.hash,
+                    flags: Imagine.flags,
+                    loading: (uri: string, progress: string) => {
+                        // console.log("loading", uri, "progress", progress);
+                    },
+                }).catch((err) => {
+                    task.error = err;
+                    task.save();
+                    console.error(`upscale error ${err}`)
+                    return;
+                });
+
+                task.result = Upscale ? Upscale : {};
+                task.percentage = '100%';
+                task.status = "completed";
+            } catch (err: any) {
                 task.error = err;
                 task.save();
                 console.error(`upscale error ${err}`)
                 return;
-            });
+            }
+        } else if (task.command === "variation") {
+            try {
+                const req_prompt = JSON.parse(task.prompt);
+                const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
+                const Imagine = req_task.result;
+                const Variation = await client.Variation({
+                    index: req_prompt.position,
+                    msgId: <string>Imagine.id,
+                    hash: <string>Imagine.hash,
+                    flags: Imagine.flags,
+                    loading: (uri: string, progress: string) => {
+                        // console.log("loading", uri, "progress", progress);
+                    },
+                }).catch((err) => {
+                    task.error = err;
+                    task.save();
+                    console.error(`variation error ${err}`)
+                    return;
+                });
 
-            task.result = Upscale ? Upscale : {};
-            task.percentage = '100%';
-            task.status = "completed";
-        } catch (err: any) {
-            task.error = err;
-            task.save();
-            console.error(`upscale error ${err}`)
-            return;
-        }
-    } else if (task.command === "variation") {
-        try {
-            const req_prompt = JSON.parse(task.prompt);
-            const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
-            const Imagine = req_task.result;
-            const Variation = await client.Variation({
-                index: req_prompt.position,
-                msgId: <string>Imagine.id,
-                hash: <string>Imagine.hash,
-                flags: Imagine.flags,
-                loading: (uri: string, progress: string) => {
-                    // console.log("loading", uri, "progress", progress);
-                },
-            }).catch((err) => {
+                task.result = Variation ? Variation : {};
+                task.percentage = '100%';
+                task.status = "completed";
+            } catch (err: any) {
                 task.error = err;
                 task.save();
                 console.error(`variation error ${err}`)
                 return;
-            });
+            }
+        } else if (task.command === "zoomout") {
+            try {
+                const req_prompt = JSON.parse(task.prompt);
+                const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
+                const Upscale = req_task.result;
+                const Zoomout = await client.ZoomOut({
+                    level: req_prompt.zx,
+                    msgId: <string>Upscale.id,
+                    hash: <string>Upscale.hash,
+                    flags: Upscale.flags,
+                    loading: (uri: string, progress: string) => {
+                        // console.log("Zoomout loading", uri, "progress", progress);
+                    },
+                }).catch((err) => {
+                    task.error = err;
+                    task.save();
+                    console.error(`zoomout error ${err}`)
+                    return;
+                });
 
-            task.result = Variation ? Variation : {};
-            task.percentage = '100%';
-            task.status = "completed";
-        } catch (err: any) {
-            task.error = err;
-            task.save();
-            console.error(`variation error ${err}`)
-            return;
-        }
-    } else if (task.command === "zoomout") {
-        try {
-            const req_prompt = JSON.parse(task.prompt);
-            const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
-            const Upscale = req_task.result;
-            const Zoomout = await client.ZoomOut({
-                level: req_prompt.zx,
-                msgId: <string>Upscale.id,
-                hash: <string>Upscale.hash,
-                flags: Upscale.flags,
-                loading: (uri: string, progress: string) => {
-                    // console.log("Zoomout loading", uri, "progress", progress);
-                },
-            }).catch((err) => {
+                task.result = Zoomout ? Zoomout : {};
+                task.percentage = '100%';
+                task.status = "completed";
+            } catch (err: any) {
                 task.error = err;
                 task.save();
                 console.error(`zoomout error ${err}`)
                 return;
-            });
-
-            task.result = Zoomout ? Zoomout : {};
-            task.percentage = '100%';
-            task.status = "completed";
-        } catch (err: any) {
-            task.error = err;
-            task.save();
-            console.error(`zoomout error ${err}`)
-            return;
+            }
         }
-    }
 
-    await task.save();
+        await task.save();
+    } catch (err: any) {
+        console.error(`task error ${task} -> ${err}`)
+        return;
+    }
 };
 
