@@ -12,13 +12,18 @@ export const processTask = async (task: TaskInterface) => {
     });
 
     const update = (msg: any) => {
-        const re_pat = /(\d+%)/;
-        if (msg.d.content) {
-            const percentage = msg.d.content.match(re_pat);
-            if (percentage && parseFloat(percentage[0]) > parseFloat(task.percentage ? task.percentage : '0')) {
-                task.percentage = percentage[0];
-                task.save();
+        try {
+            const re_pat = /(\d+%)/;
+            if (msg.d.content) {
+                const percentage = msg.d.content.match(re_pat);
+                if (percentage && parseFloat(percentage[0]) > parseFloat(task.percentage ? task.percentage : '0')) {
+                    task.percentage = percentage[0];
+                    task.save();
+                }
             }
+        } catch (err: any) {
+            console.error(`update error ${err}`)
+            return;
         }
     }
 

@@ -56,9 +56,9 @@ export class Midjourney extends MidjourneyMessage {
     if (this.wsClient) {
       return await this.wsClient.waitImageMessage(nonce, loading);
     } else {
-      this.log(`await generate image`);
+      // this.log(`await generate image`);
       const msg = await this.WaitMessage(prompt, loading);
-      this.log(`image generated`, prompt, msg?.uri);
+      // this.log(`image generated`, prompt, msg?.uri);
       return msg;
     }
   }
@@ -124,7 +124,7 @@ export class Midjourney extends MidjourneyMessage {
   async Describe(imgUri: string) {
     const nonce = nextNonce();
     const DcImage = await this.MJApi.UploadImage(imgUri);
-    this.log(`Describe`, DcImage, "nonce", nonce);
+    // this.log(`Describe`, DcImage, "nonce", nonce);
     const httpStatus = await this.MJApi.DescribeApi(DcImage, nonce);
     if (httpStatus !== 204) {
       throw new Error(`DescribeApi failed with status ${httpStatus}`);
