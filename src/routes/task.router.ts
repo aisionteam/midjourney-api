@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 
+import { client as redis } from '../configs/redis.config';
+import { sendToQueue } from '../configs/rabbitmq.config';
 import Task, { TaskInterface } from '../models/task.model';
 import User, { UserInterface } from '../models/user.model';
 import { processTask } from "../utils/task.utils"
@@ -8,25 +10,36 @@ import { AuthenticatedRequest, authenticateToken } from "../middlewares/auth.mid
 const router = express.Router();
 
 router.post("/", authenticateToken, async (req: any, res: Response) => {
+    /*
+    * Create a new task
+    * @param {string} prompt - The prompt to be used for the task
+    * @param {string} command - The command to be used for the task
+    * 
+    */
+
+    // Here I want to create a new task and add it to the database, 
+    // redis, and to the message queue.
     const prompt = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
     const user: UserInterface = req.user;
     const newTask: TaskInterface = new Task({
         prompt: prompt,
         command: command,
-        status: "waiting",
+        status: "queue",
         user: user,
     });
 
     await newTask.save();
-    processTask(newTask);
+    await redis.set(`${newTask.uuid}`, JSON.stringify(newTask));
+    await sendToQueue("tasks", JSON.stringify(newTask))
     res.json(newTask);
 });
 
 router.get("/:uuid", async (req: Request, res: Response) => {
     try {
         const uuid = req.params.uuid;
-        const task: any = await Task.findOne({ uuid }).lean();
+        const redistask: string | null = await redis.get(uuid);
+        const task: any = JSON.parse(redistask as string) ? redistask : await Task.findOne({ uuid }).lean();
 
         if (!task) {
             return res.status(404).json({ message: "Not found" });

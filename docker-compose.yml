@@ -29,6 +29,39 @@ services:
       - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=3000"
       - "traefik.docker.network=traefik-net"
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    env_file:
+      - .env
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    networks:
+      - app-net
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}.entrypoints=web"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}.rule=Host(`${PROJECT_RABBITMQ}.bot.inbeet.tech`)"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}.middlewares=https-redirect"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.rule=Host(`${PROJECT_RABBITMQ}.bot.inbeet.tech`)"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.tls=true"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.service=${PROJECT_RABBITMQ}"
+      - "traefik.http.services.${PROJECT_RABBITMQ}.loadbalancer.server.port=15672"
+      - "traefik.docker.network=traefik-net"
+    depends_on:
+      - mongodb
+
+  redis:
+    image: redis
+    env_file:
+      - .env
+    networks:
+      - app-net
+    depends_on:
+      - mongodb
+
   mongodb:
     image: mongo
     env_file:
@@ -71,6 +104,7 @@ services:
 
 volumes:
   dbdata:
+  rabbitmqdata:
 
 
 networks:

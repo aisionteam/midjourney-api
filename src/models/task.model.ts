@@ -8,6 +8,7 @@ export interface TaskInterface extends BaseDocumentInterface {
     user?: Schema.Types.ObjectId, // Foreign key reference to the User model
     prompt: string,
     command: string,
+    callback_url?: string,
     result: Object,
     status: string,
     error: Object,
@@ -35,6 +36,10 @@ const TaskSchema = new BaseDocumentSchema(
             default: "imagine",
             enum: ["imagine", "describe", "variation", "upscale", "zoomout"],
         },
+        callback_url: {
+            type: String,
+            trim: true,
+        },
         result: {
             type: Object,
             trim: true,
@@ -43,7 +48,7 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             required: true,
             default: "initialized",
-            enum: ["initialized", "waiting", "completed"],
+            enum: ["initialized", "queue", "waiting", "running", "completed"],
         },
         error: {
             type: Object,
