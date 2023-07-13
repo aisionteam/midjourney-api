@@ -4,6 +4,7 @@ const redisUri = 'redis';
 const salali_tokens = process.env.SALAI_TOKENS ? process.env.SALAI_TOKENS.split(',') : process.env.SALAI_TOKEN ? [process.env.SALAI_TOKEN] : [];
 const salali_free = process.env.SALAI_FREE ? process.env.SALAI_FREE.split(',') : salali_tokens;
 
+
 const configs = {
     mongo: { mongodbUri },
     rabbitmq: { rabbitmqUri, concurrent_consumers: 12 },

@@ -22,12 +22,14 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     // redis, and to the message queue.
     const prompt = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
+    const freemode = req.body.freemode ? req.body.freemode : false;
     const user: UserInterface = req.user;
     const newTask: TaskInterface = new Task({
         prompt: prompt,
         command: command,
         status: "queue",
         user: user,
+        freemode: freemode,
     });
 
     await newTask.save();

@@ -12,6 +12,7 @@ export async function startTaskReceiver() {
         } else {
             token = getRandomChoice(config.discord.salali_tokens);
         }
+        // console.log(token)
         await processTask(task, token);
     });
 }
