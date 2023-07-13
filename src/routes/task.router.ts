@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 
-import { client as redis } from '../configs/redis.config';
+import configs from '../configs/env.configs';
+import { redisClient as redis } from '../configs/redis.config';
 import { sendToQueue } from '../configs/rabbitmq.config';
 import Task, { TaskInterface } from '../models/task.model';
 import User, { UserInterface } from '../models/user.model';
@@ -30,8 +31,8 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     });
 
     await newTask.save();
-    await redis.set(`${newTask.uuid}`, JSON.stringify(newTask));
-    await sendToQueue("tasks", JSON.stringify(newTask))
+    redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire);
+    sendToQueue("tasks", JSON.stringify(newTask))
     res.json(newTask);
 });
 
@@ -39,7 +40,7 @@ router.get("/:uuid", async (req: Request, res: Response) => {
     try {
         const uuid = req.params.uuid;
         const redistask: string | null = await redis.get(uuid);
-        const task: any = JSON.parse(redistask as string) ? redistask : await Task.findOne({ uuid }).lean();
+        const task: any = redistask ? JSON.parse(redistask) : await Task.findOne({ uuid }).lean();
 
         if (!task) {
             return res.status(404).json({ message: "Not found" });

@@ -1,30 +1,45 @@
-import configs from "../configs/env.configs";
-import redis, { createClient, RedisClientOptions } from 'redis';
+import configs from "./env.configs";
+import IORedis from 'ioredis';
 
-// export const client = createClient({
-//     host: configs.redis.redisUri,
-// } as RedisClientOptions);
+class RedisSingleton {
+    private static instance: RedisSingleton;
+    private client: IORedis;
 
-// client.on('connect', () => {
-//     console.log('Connected to Redis');
-// });
+    private constructor() {
+        // Create a Redis client
+        this.client = new IORedis({
+            host: configs.redis.redisUri,
+        });
 
-// client.on('error', (error) => {
-//     console.error('Redis error:', error);
-// });
+        // Handle client connection events
+        this.client.on('connect', () => {
+            console.log('Connected to Redis');
+        });
 
-export const client = async () => {
-    const redisClient = createClient({
-        host: configs.redis.redisUri,
-    } as RedisClientOptions);
+        this.client.on('error', (error) => {
+            console.error('Redis error:', error);
+        });
+    }
 
-    redisClient.on('error', (error) => {
-        console.error('Redis error:', error);
-    });
+    public static getInstance(): RedisSingleton {
+        if (!RedisSingleton.instance) {
+            RedisSingleton.instance = new RedisSingleton();
+        }
 
-    redisClient.on('connect', () => {
-        console.log('Connected to Redis');
-    })
-    await redisClient.connect();
-    return redisClient;
+        return RedisSingleton.instance;
+    }
+
+    public async connect(): Promise<void> {
+        if (this.client.status === 'connecting' || this.client.status === 'connect') {
+            return;
+        }
+
+        await this.client.connect();
+    }
+
+    public getClient(): IORedis {
+        return this.client;
+    }
 }
+
+export const redisClient = RedisSingleton.getInstance().getClient();

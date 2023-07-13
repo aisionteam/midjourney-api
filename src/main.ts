@@ -1,7 +1,7 @@
 import express from "express";
 
 import mongoConn from "./configs/mongodb.configs";
-import { client as redis } from "./configs/redis.config";
+import { redisClient as redis } from "./configs/redis.config";
 
 import authRouter from "./routes/auth.router";
 import taskRouter from "./routes/task.router";
@@ -9,7 +9,7 @@ import { startTaskReceiver } from "./receivers/task.receiver";
 
 (async () => {
   await mongoConn;
-  await redis;
+  // await redis.connect();
 })();
 
 startTaskReceiver();

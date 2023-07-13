@@ -9,6 +9,7 @@ export interface TaskInterface extends BaseDocumentInterface {
     prompt: string,
     command: string,
     callback_url?: string,
+    freemode: boolean,
     result: Object,
     status: string,
     error: Object,
@@ -39,6 +40,10 @@ const TaskSchema = new BaseDocumentSchema(
         callback_url: {
             type: String,
             trim: true,
+        },
+        freemode: {
+            type: Boolean,
+            default: false,
         },
         result: {
             type: Object,
