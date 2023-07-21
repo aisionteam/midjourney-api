@@ -141,6 +141,9 @@ export const processTask = async (task: TaskInterface,
             .catch((error) => {
                 console.error('Error setting key:', task.uuid, error);
             });
+        try {
+            await task.save();
+        } catch (err: any) {}
         return;
     }
 };
