@@ -5,8 +5,9 @@ import * as fs from "fs";
 import path from "path";
 import * as mime from "mime";
 import { Command } from "./command";
+import configs from "./configs/env.configs";
 export class MidjourneyApi extends Command {
-  private apiQueue = CreateQueue(1);
+  private apiQueue = CreateQueue(configs.midjourney.concurrent_tasks);
   UpId = Date.now() % 10; // upload id
   constructor(public config: MJConfig) {
     super(config);

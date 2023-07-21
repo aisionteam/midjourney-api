@@ -6,11 +6,13 @@ import { redisClient as redis } from "../configs/redis.config";
 import configs from "../configs/env.configs";
 
 
-export const processTask = async (task: TaskInterface, SalaiToken: string | null = null) => {
+export const processTask = async (task: TaskInterface,
+    salaiToken: string | undefined = undefined,
+    channel: string | undefined = undefined) => {
     const client = new Midjourney({
         ServerId: <string>process.env.SERVER_ID,
-        ChannelId: <string>process.env.CHANNEL_ID,
-        SalaiToken: SalaiToken ? SalaiToken : <string>process.env.SALAI_TOKEN,
+        ChannelId: channel ? channel : <string>process.env.CHANNEL_ID,
+        SalaiToken: salaiToken ? salaiToken : <string>process.env.SALAI_TOKEN,
         HuggingFaceToken: <string>process.env.HUGGINGFACE_TOKEN,
         Debug: true,
         Ws: true,
@@ -23,12 +25,29 @@ export const processTask = async (task: TaskInterface, SalaiToken: string | null
     }
     task = foundtask;
 
-    const update = (msg: any) => {
+    const update = (uri: string, percentage: string) => {
+        redis.get(`${task.uuid}`).then((processingTask) => {
+            const currentPercent = parseInt((processingTask ? JSON.parse(processingTask).percentage : undefined) || "0");
+            if (parseInt(percentage) > currentPercent) {
+                task.status = "running";
+                task.percentage = percentage;
+
+                redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
+                    if (task.callback_url) {
+                        axios.get(task.callback_url).catch(err => { console.error(err) });
+                    }
+                });
+            }
+        });
+    };
+
+    const update2 = (msg: any) => {
         try {
             const re_pat = /(\d+%)/;
             if (msg.d.content) {
                 const percentage = msg.d.content.match(re_pat);
-                if (percentage && parseFloat(percentage[0]) > parseFloat(task.percentage ? task.percentage : '0')) {
+                console.log(`updatd2 ${task.command} ${task.prompt.substring(0, 20)} ${task.percentage} ${task.status}`)
+                if (percentage > (task.percentage || 0)) {
                     task.status = "running";
                     task.percentage = percentage[0];
                     redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
@@ -44,7 +63,7 @@ export const processTask = async (task: TaskInterface, SalaiToken: string | null
         }
     }
 
-    await client.Connect(update);
+    await client.Connect(); //update);
     try {
         task.status = "waiting";
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
@@ -55,7 +74,7 @@ export const processTask = async (task: TaskInterface, SalaiToken: string | null
         let midAction: Promise<any>;
         switch (task.command) {
             case 'imagine':
-                midAction = client.Imagine(task.prompt)
+                midAction = client.Imagine(task.prompt, update)
                 break;
             case 'describe':
                 midAction = client.Describe(task.prompt)
@@ -80,6 +99,7 @@ export const processTask = async (task: TaskInterface, SalaiToken: string | null
                     msgId: <string>Imagine_v.id,
                     hash: <string>Imagine_v.hash,
                     flags: Imagine_v.flags,
+                    loading: update,
                 })
                 break;
             case 'zoomout':
@@ -91,6 +111,7 @@ export const processTask = async (task: TaskInterface, SalaiToken: string | null
                     msgId: <string>Upscale_z.id,
                     hash: <string>Upscale_z.hash,
                     flags: Upscale_z.flags,
+                    loading: update,
                 })
                 break;
             default:

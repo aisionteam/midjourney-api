@@ -8,9 +8,10 @@ import {
 } from "./interfaces";
 import { CreateQueue } from "./queue";
 import { formatOptions, sleep } from "./utls";
+import configs from "./configs/env.configs";
 
 export class MidjourneyMessage {
-  private magApiQueue = CreateQueue(1);
+  private magApiQueue = CreateQueue(configs.midjourney.concurrent_tasks);
   public config: MJConfig;
   constructor(defaults: MJConfigParam) {
     const { SalaiToken } = defaults;

@@ -20,21 +20,22 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
 
     // Here I want to create a new task and add it to the database, 
     // redis, and to the message queue.
-    const prompt = req.body.prompt ? req.body.prompt : '';
+    const prompt_req = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
-    const freemode = req.body.freemode ? req.body.freemode : false;
+    const free = req.body.free ? req.body.free : false;
+    const prompt = prompt_req.replace(/--relax/gm, "").replace(/--turbo/gm, "").replace(/--fast/gm, "") + (free ? " --relax" : "");
     const user: UserInterface = req.user;
     const newTask: TaskInterface = new Task({
-        prompt: prompt,
-        command: command,
+        prompt,
+        command,
+        user,
+        free,
         status: "queue",
-        user: user,
-        freemode: freemode,
     });
 
     await newTask.save();
     redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire);
-    sendToQueue("tasks", JSON.stringify(newTask))
+    sendToQueue(free ? "freetasks" : "tasks", JSON.stringify(newTask))
     res.json(newTask);
 });
 

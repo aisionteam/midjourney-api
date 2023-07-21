@@ -28,7 +28,7 @@ class ConcurrentQueue {
   }
 }
 export function CreateQueue<T>(concurrency: number) {
-  return new ConcurrentQueue(5);
+  return new ConcurrentQueue(concurrency);
 }
 
 // // Usage example:
