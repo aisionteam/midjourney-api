@@ -25,7 +25,7 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     const free = req.body.free ? req.body.free : false;
     const prompt = prompt_req.replace(/--relax/gm, "").replace(/--turbo/gm, "").replace(/--fast/gm, "") + (free ? " --relax" : "");
     const user: UserInterface = req.user;
-    const newTask: TaskInterface = new Task({
+    let newTask: TaskInterface = new Task({
         prompt,
         command,
         user,
@@ -34,8 +34,10 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     });
 
     await newTask.save();
+    const turn = await sendToQueue(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
+    newTask.turn = turn;
+    console.log("newTask", turn);
     redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire);
-    sendToQueue(free ? "freetasks" : "tasks", JSON.stringify(newTask))
     res.json(newTask);
 });
 

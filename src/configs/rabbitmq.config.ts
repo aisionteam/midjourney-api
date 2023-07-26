@@ -6,15 +6,17 @@ export async function sendToQueue(queue: string, msg: string) {
     const channel = await connection.createChannel();
     await channel.assertQueue(queue);
     await channel.sendToQueue(queue, Buffer.from(msg));
+    const queueInfo = await channel.assertQueue(queue);
     await channel.close();
     await connection.close();
+    return queueInfo.messageCount;
 }
 
-export async function consumeFromQueue(queue: string, timeout: number, callback: (msg: string) => Promise<void>) {
+export async function consumeFromQueue(queue: string, concurrent: number, timeout: number, callback: (msg: string) => Promise<void>) {
     const connection = await amqb.connect(configs.rabbitmq.rabbitmqUri);
     const channel = await connection.createChannel();
     await channel.assertQueue(queue);
-    channel.prefetch(configs.rabbitmq.concurrent_consumers);
+    channel.prefetch(concurrent);
     await channel.consume(queue, async (msg) => {
         if (msg) {
             const timeoutTimer = new Promise((resolve, reject) => {

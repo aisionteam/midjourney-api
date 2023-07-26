@@ -16,7 +16,13 @@ const redisUri = 'redis';
 
 const configs = {
     mongo: { mongodbUri },
-    rabbitmq: { rabbitmqUri, concurrent_consumers: 40, timeout: 5 * 60 * 1000 },
+    rabbitmq: {
+        rabbitmqUri,
+        concurrent_consumers: 10,
+        timeout: 5 * 60 * 1000,
+        concurrent_consumers_free: 1,
+        timeout_free: 5 * 60 * 1000,
+    },
     redis: { redisUri, task_expire: 60 * 15 },
     discord: {
         salali_tokens: secrets.salali_tokens,
@@ -24,7 +30,7 @@ const configs = {
         channels: secrets.channels,
         channels_free: secrets.channels_free,
     },
-    midjourney: { concurrent_tasks: 10 },
+    midjourney: { concurrent_tasks: 10, concurrent_tasks_free: 1, },
 }
 
 

@@ -15,6 +15,7 @@ export interface TaskInterface extends BaseDocumentInterface {
     error: Object,
     message: string,
     percentage?: string,
+    turn?: number,
 }
 
 const TaskSchema = new BaseDocumentSchema(
@@ -67,6 +68,9 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             trim: true,
         },
+        turn: { 
+            type: Number,
+        }
     },
     null,
 );

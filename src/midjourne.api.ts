@@ -13,7 +13,8 @@ export class MidjourneyApi extends Command {
     super(config);
   }
   // limit the number of concurrent interactions
-  protected async safeIteractions(payload: any) {
+  protected async safeInteractions(payload: any) {
+    // todo without queue
     return this.apiQueue.addTask(
       () =>
         new Promise<number>((resolve) => {
@@ -54,7 +55,7 @@ export class MidjourneyApi extends Command {
   }
   async ImagineApi(prompt: string, nonce: string = nextNonce()) {
     const payload = await this.imaginePayload(prompt, nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   async VariationApi({
     index,
@@ -140,23 +141,23 @@ export class MidjourneyApi extends Command {
         custom_id: customId,
       },
     };
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   async InfoApi(nonce?: string) {
     const payload = await this.infoPayload(nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   async SettingsApi(nonce?: string) {
     const payload = await this.settingsPayload(nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   async FastApi(nonce?: string) {
     const payload = await this.fastPayload(nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   async RelaxApi(nonce?: string) {
     const payload = await this.relaxPayload(nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
   /**
    *
@@ -249,6 +250,6 @@ export class MidjourneyApi extends Command {
   }
   async DescribeApi(image: DiscordImage, nonce?: string) {
     const payload = await this.describePayload(image, nonce);
-    return this.safeIteractions(payload);
+    return this.safeInteractions(payload);
   }
 }

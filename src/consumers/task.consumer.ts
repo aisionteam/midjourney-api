@@ -18,9 +18,9 @@ export async function startTaskReceiver() {
         // console.log(token)
         await processTask(task, token, channel);
     };
-    
-    const tasksConsumer = consumeFromQueue("tasks", configs.rabbitmq.timeout, processor);
-    const freeTasksConsumer = consumeFromQueue("freetasks",configs.rabbitmq.timeout, processor);
+
+    const tasksConsumer = consumeFromQueue("tasks", configs.rabbitmq.concurrent_consumers, configs.rabbitmq.timeout, processor);
+    const freeTasksConsumer = consumeFromQueue("free_tasks", configs.rabbitmq.concurrent_consumers_free, configs.rabbitmq.timeout_free, processor);
 
     await Promise.all([tasksConsumer, freeTasksConsumer])
 }
