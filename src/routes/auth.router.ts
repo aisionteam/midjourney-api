@@ -31,18 +31,18 @@ router.post("/login", async (req: any, res: any) => {
 });
 
 
-// router.post("/register", async (req: any, res: any) => {
-//     const { username, password } = req.body;
-//     const hashedPassword = await bcrypt.hash(password, 10);
+router.post("/register", async (req: any, res: any) => {
+    const { username, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-//     try {
-//         const user = new User({ username, password: hashedPassword, token: uuid4() });
-//         await user.save();
-//         res.status(201).json({ message: "User registered successfully" });
-//     } catch (error) {
-//         res.status(500).json({ message: "Error registering user" });
-//     }
-// });
+    try {
+        const user = new User({ username, password: hashedPassword, token: uuid4() });
+        await user.save();
+        res.status(201).json({ message: "User registered successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error registering user" });
+    }
+});
 
 
 export default router;

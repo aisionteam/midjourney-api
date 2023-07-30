@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import configs from "../configs/env.configs";
+import configs from "./env.configs";
 
 const mongoConn = mongoose
     .connect(configs.mongo.mongodbUri,)

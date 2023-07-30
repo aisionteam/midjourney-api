@@ -1,5 +1,8 @@
 import express, { Request, Response } from 'express';
 
+import configs from '../configs/env.configs';
+import { redisClient as redis } from '../configs/redis.config';
+import { sendToQueue } from '../configs/rabbitmq.config';
 import Task, { TaskInterface } from '../models/task.model';
 import User, { UserInterface } from '../models/user.model';
 import { processTask } from "../utils/task.utils"
@@ -8,25 +11,40 @@ import { AuthenticatedRequest, authenticateToken } from "../middlewares/auth.mid
 const router = express.Router();
 
 router.post("/", authenticateToken, async (req: any, res: Response) => {
-    const prompt = req.body.prompt ? req.body.prompt : '';
+    /*
+    * Create a new task
+    * @param {string} prompt - The prompt to be used for the task
+    * @param {string} command - The command to be used for the task
+    * 
+    */
+
+    // Here I want to create a new task and add it to the database, 
+    // redis, and to the message queue.
+    const prompt_req = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
+    const free = req.body.free ? req.body.free : false;
+    const prompt = prompt_req.replace(/--relax/gm, "").replace(/--turbo/gm, "").replace(/--fast/gm, "") + (free ? " --relax" : "");
     const user: UserInterface = req.user;
-    const newTask: TaskInterface = new Task({
-        prompt: prompt,
-        command: command,
-        status: "waiting",
-        user: user,
+    let newTask: TaskInterface = new Task({
+        prompt,
+        command,
+        user,
+        free,
+        status: "queue",
     });
 
     await newTask.save();
-    processTask(newTask);
+    const turn = await sendToQueue(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
+    newTask.turn = turn;
+    redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire);
     res.json(newTask);
 });
 
 router.get("/:uuid", async (req: Request, res: Response) => {
     try {
         const uuid = req.params.uuid;
-        const task: any = await Task.findOne({ uuid }).lean();
+        const redistask: string | null = await redis.get(uuid);
+        const task: any = redistask ? JSON.parse(redistask) : await Task.findOne({ uuid }).lean();
 
         if (!task) {
             return res.status(404).json({ message: "Not found" });
