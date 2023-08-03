@@ -16,6 +16,7 @@ export interface TaskInterface extends BaseDocumentInterface {
     message: string,
     percentage?: string,
     turn?: number,
+    temp_uri: string[],
 }
 
 const TaskSchema = new BaseDocumentSchema(
@@ -67,10 +68,16 @@ const TaskSchema = new BaseDocumentSchema(
         percentage: {
             type: String,
             trim: true,
+            default: "0",
         },
-        turn: { 
+        turn: {
             type: Number,
-        }
+        },
+        temp_uri: {
+            type: [String],
+            default: [],
+        },
+
     },
     null,
 );

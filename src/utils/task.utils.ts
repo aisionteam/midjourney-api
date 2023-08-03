@@ -27,10 +27,12 @@ export const processTask = async (task: TaskInterface,
 
     const update = (uri: string, percentage: string) => {
         redis.get(`${task.uuid}`).then((processingTask) => {
+            console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
             const currentPercent = parseInt((processingTask ? JSON.parse(processingTask).percentage : undefined) || "0");
             if (parseInt(percentage) > currentPercent) {
                 task.status = "running";
                 task.percentage = percentage;
+                task.temp_uri = processingTask ? [uri, ...JSON.parse(processingTask).temp_uri, uri] : [uri];
 
                 redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
                     if (task.callback_url) {
@@ -40,28 +42,6 @@ export const processTask = async (task: TaskInterface,
             }
         });
     };
-
-    const update2 = (msg: any) => {
-        try {
-            const re_pat = /(\d+%)/;
-            if (msg.d.content) {
-                const percentage = msg.d.content.match(re_pat);
-                console.log(`updatd2 ${task.command} ${task.prompt.substring(0, 20)} ${task.percentage} ${task.status}`)
-                if (percentage > (task.percentage || 0)) {
-                    task.status = "running";
-                    task.percentage = percentage[0];
-                    redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-                        if (task.callback_url) {
-                            axios.get(task.callback_url).catch(err => { console.error(err) });
-                        }
-                    });
-                }
-            }
-        } catch (err: any) {
-            console.error(`update error ${err}`)
-            return;
-        }
-    }
 
     await client.Connect(); //update);
     try {
@@ -129,6 +109,7 @@ export const processTask = async (task: TaskInterface,
         task.result = result ? result : {};
         task.percentage = "100%";
         task.status = "completed";
+        console.log(`task completed ${task.command} ${task.prompt.substring(0, 20)} ${task.uuid}`)
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
             if (task.callback_url) {
                 axios.get(task.callback_url).catch(err => { console.error(err) });
@@ -143,7 +124,7 @@ export const processTask = async (task: TaskInterface,
             });
         try {
             await task.save();
-        } catch (err: any) {}
+        } catch (err: any) { }
         return;
     }
 };
