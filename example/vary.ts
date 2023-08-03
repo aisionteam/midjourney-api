@@ -2,9 +2,9 @@ import "dotenv/config";
 import { Midjourney } from "../src";
 /**
  *
- * a simple example of how to use the options with ws command
+ * a simple example of how to use the vary
  * ```
- * npx tsx example/options.ts
+ * npx tsx example/vary.ts
  * ```
  */
 async function main() {
@@ -13,10 +13,17 @@ async function main() {
     ChannelId: <string>process.env.CHANNEL_ID,
     SalaiToken: <string>process.env.SALAI_TOKEN,
     Debug: true,
-    Ws: true,
+    Ws: true, //enable ws is required for custom zoom
   });
-  await client.Connect();
-  const Imagine = await client.Imagine("a cool cat, blue ears");
+  await client.init();
+  const prompt =
+    "Christmas dinner with spaghetti with family in a cozy house, we see interior details , simple blue&white illustration";
+  const Imagine = await client.Imagine(
+    prompt,
+    (uri: string, progress: string) => {
+      console.log("loading", uri, "progress", progress);
+    }
+  );
   console.log(Imagine);
   if (!Imagine) {
     console.log("no message");
@@ -35,25 +42,30 @@ async function main() {
     console.log("no message");
     return;
   }
-  const zoomout = Upscale?.options?.find((o) => o.label === "Zoom Out 2x");
-  if (!zoomout) {
+  console.log(Upscale);
+
+  const vary = Upscale?.options?.find((o) => o.label === "Vary (Strong)");
+  if (!vary) {
     console.log("no zoomout");
     return;
   }
-  const zoomout2x = await client.Custom({
+  const varyCustom = await client.Custom({
     msgId: <string>Upscale.id,
     flags: Upscale.flags,
-    content: Upscale.content,
-    customId: zoomout.custom,
+    content: `${prompt} --zoom 2`,
+    customId: vary.custom,
     loading: (uri: string, progress: string) => {
       console.log("loading", uri, "progress", progress);
     },
   });
-  console.log("zoomout2x", zoomout2x);
-
+  console.log("vary (Strong)", varyCustom);
   client.Close();
 }
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    console.log("done");
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

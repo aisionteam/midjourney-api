@@ -1,22 +1,27 @@
 export interface MJMessage {
   uri: string;
+  proxy_url?: string;
   content: string;
   flags: number;
   id?: string;
   hash?: string;
   progress?: string;
   options?: MJOptions[];
+  width?: number;
+  height?: number;
 }
 
 export type LoadingHandler = (uri: string, progress: string) => void;
+export type OnModal = (nonce: string, id: string) => Promise<string>;
 
 export interface WaitMjEvent {
   nonce: string;
   prompt?: string;
   id?: string;
-  index?: number;
+  del?: boolean; // is delete message
+  onmodal?: OnModal;
 }
-export interface WsEventMsg {
+export interface MJEmit {
   error?: Error;
   message?: MJMessage;
 }
@@ -44,4 +49,20 @@ export interface MJSettings {
   id: string;
   flags: number;
   options: MJOptions[];
+}
+export interface MJDescribe {
+  id: string;
+  flags: number;
+  uri: string;
+  proxy_url?: string;
+  options: MJOptions[];
+  descriptions: string[];
+}
+
+export interface MJShorten {
+  description: string;
+  id: string;
+  flags: number;
+  options: MJOptions[];
+  prompts: string[];
 }
