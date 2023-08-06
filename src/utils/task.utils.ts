@@ -14,7 +14,7 @@ export const processTask = async (task: TaskInterface,
         ChannelId: channel ? channel : <string>process.env.CHANNEL_ID,
         SalaiToken: salaiToken ? salaiToken : <string>process.env.SALAI_TOKEN,
         HuggingFaceToken: <string>process.env.HUGGINGFACE_TOKEN,
-        Debug: true,
+        Debug: false,
         Ws: true,
     });
 
@@ -27,7 +27,7 @@ export const processTask = async (task: TaskInterface,
 
     const update = (uri: string, percentage: string) => {
         redis.get(`${task.uuid}`).then((processingTask) => {
-            console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
+            // console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
             const currentPercent = parseInt((processingTask ? JSON.parse(processingTask).percentage : undefined) || "0");
             if (parseInt(percentage) > currentPercent) {
                 task.status = "running";
@@ -68,6 +68,7 @@ export const processTask = async (task: TaskInterface,
                     msgId: <string>Imagine_u.id,
                     hash: <string>Imagine_u.hash,
                     flags: Imagine_u.flags,
+                    loading: update,
                 })
                 break;
             case 'variation':
@@ -109,7 +110,7 @@ export const processTask = async (task: TaskInterface,
         task.result = result ? result : {};
         task.percentage = "100%";
         task.status = "completed";
-        console.log(`task completed ${task.command} ${task.prompt.substring(0, 20)} ${task.uuid}`)
+        // console.log(`task completed ${task.command} ${task.prompt.substring(0, 20)} ${task.uuid}`)
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
             if (task.callback_url) {
                 axios.get(task.callback_url).catch(err => { console.error(err) });

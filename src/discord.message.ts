@@ -50,7 +50,7 @@ export class MidjourneyMessage {
     callback(httpStatus);
     await sleep(this.config.ApiInterval);
   };
-  private queue = async.queue(this.processRequest, 1);
+  private queue = async.queue(this.processRequest, 5);
 
   protected log(...args: any[]) {
     this.config.Debug && console.log(...args, new Date().toISOString());

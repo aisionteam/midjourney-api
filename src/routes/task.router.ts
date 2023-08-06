@@ -36,7 +36,6 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     await newTask.save();
     const turn = await sendToQueue(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
     newTask.turn = turn;
-    console.log("newTask", newTask.uuid, newTask.turn);
     redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire);
     res.json(newTask);
 });
