@@ -49,7 +49,7 @@ export class MidjourneyApi extends Command {
     callback(httpStatus);
     await sleep(this.config.ApiInterval);
   };
-  private queue = async.queue(this.processRequest, 1);
+  private queue = async.queue(this.processRequest, 5);
   private interactions = async (payload: any) => {
     try {
       const headers = {
@@ -403,9 +403,8 @@ export class MidjourneyApi extends Command {
     if (response.status === 200) {
       return (await response.json()) as { attachments: UploadSlot[] };
     }
-    const error = `Attachments return ${response.status} ${
-      response.statusText
-    } ${await response.text()}`;
+    const error = `Attachments return ${response.status} ${response.statusText
+      } ${await response.text()}`;
     throw new Error(error);
   }
 
@@ -423,8 +422,7 @@ export class MidjourneyApi extends Command {
     });
     if (!response.ok) {
       throw new Error(
-        `uploadImage return ${response.status} ${
-          response.statusText
+        `uploadImage return ${response.status} ${response.statusText
         } ${await response.text()}`
       );
     }

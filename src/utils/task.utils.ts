@@ -3,16 +3,18 @@ import axios from 'axios';
 import Task, { TaskInterface } from "../models/task.model";
 import { Midjourney } from "..";
 import { redisClient as redis } from "../configs/redis.config";
-import configs from "../configs/env.configs";
+import configs, { DiscordConfig } from "../configs/env.configs";
+import { env } from 'process';
 
 
-export const processTask = async (task: TaskInterface,
-    salaiToken: string | undefined = undefined,
-    channel: string | undefined = undefined) => {
+export const processTask = async (
+    task: TaskInterface,
+    discordConfig: DiscordConfig | undefined = undefined,
+) => {
     const client = new Midjourney({
-        ServerId: <string>process.env.SERVER_ID,
-        ChannelId: channel ? channel : <string>process.env.CHANNEL_ID,
-        SalaiToken: salaiToken ? salaiToken : <string>process.env.SALAI_TOKEN,
+        ServerId: discordConfig ? <string>discordConfig.server : <string>process.env.SERVER_ID,
+        ChannelId: discordConfig ? <string>discordConfig.channel : <string>process.env.CHANNEL_ID,
+        SalaiToken: discordConfig ? <string>discordConfig.token : <string>process.env.SALAI_TOKEN,
         HuggingFaceToken: <string>process.env.HUGGINGFACE_TOKEN,
         Debug: false,
         Ws: true,
@@ -36,28 +38,28 @@ export const processTask = async (task: TaskInterface,
 
                 redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
                     if (task.callback_url) {
-                        axios.get(task.callback_url).catch(err => { console.error(err) });
+                        axios.post(task.callback_url, task).catch(err => { console.error(err) });
                     }
                 });
             }
         });
     };
 
-    await client.Connect(); //update);
     try {
+        await client.Connect();
         task.status = "waiting";
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
             if (task.callback_url) {
-                axios.get(task.callback_url).catch(err => { console.error(err) });
+                axios.post(task.callback_url, task).catch(err => { console.error(err) });
             }
         });
         let midAction: Promise<any>;
         switch (task.command) {
             case 'imagine':
-                midAction = client.Imagine(task.prompt, update)
+                midAction = client.Imagine(task.prompt, update).catch((err) => { throw err });
                 break;
             case 'describe':
-                midAction = client.Describe(task.prompt)
+                midAction = client.Describe(task.prompt).catch((err) => { throw err });
                 break;
             case 'upscale':
                 const req_prompt_u = JSON.parse(task.prompt);
@@ -69,7 +71,7 @@ export const processTask = async (task: TaskInterface,
                     hash: <string>Imagine_u.hash,
                     flags: Imagine_u.flags,
                     loading: update,
-                })
+                }).catch((err) => { throw err });
                 break;
             case 'variation':
                 const req_prompt_v = JSON.parse(task.prompt);
@@ -81,7 +83,7 @@ export const processTask = async (task: TaskInterface,
                     hash: <string>Imagine_v.hash,
                     flags: Imagine_v.flags,
                     loading: update,
-                })
+                }).catch((err) => { throw err });
                 break;
             case 'zoomout':
                 const req_prompt_z = JSON.parse(task.prompt);
@@ -93,7 +95,7 @@ export const processTask = async (task: TaskInterface,
                     hash: <string>Upscale_z.hash,
                     flags: Upscale_z.flags,
                     loading: update,
-                })
+                }).catch((err) => { throw err });
                 break;
             default:
                 throw new Error('Invalid value of t');
@@ -102,7 +104,7 @@ export const processTask = async (task: TaskInterface,
             task.error = err;
             redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
                 if (task.callback_url) {
-                    axios.get(task.callback_url).catch(err => { console.error(err) });
+                    axios.post(task.callback_url, task).catch(err => { console.error(err) });
                 }
             });
         });
@@ -110,19 +112,23 @@ export const processTask = async (task: TaskInterface,
         task.result = result ? result : {};
         task.percentage = "100%";
         task.status = "completed";
+        task.account = discordConfig?.name;
+        await task.save();
         // console.log(`task completed ${task.command} ${task.prompt.substring(0, 20)} ${task.uuid}`)
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
             if (task.callback_url) {
-                axios.get(task.callback_url).catch(err => { console.error(err) });
+                axios.post(task.callback_url, task).catch(err => { console.error(err) });
             }
         });
-        await task.save();
     } catch (err: any) {
         console.error(`task error ${task} -> ${err}`);
-        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire)
-            .catch((error) => {
-                console.error('Error setting key:', task.uuid, error);
-            });
+        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
+            if (task.callback_url) {
+                axios.post(task.callback_url, task).catch(err => { console.error(err) });
+            }
+        }).catch((error) => {
+            console.error('Error setting key:', task.uuid, error);
+        });
         try {
             await task.save();
         } catch (err: any) { }

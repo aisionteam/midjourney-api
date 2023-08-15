@@ -1,12 +1,26 @@
 import fs from 'fs';
 
 const filePath = './src/configs/secrets.json';
+
+export interface DiscordConfig {
+    name: string,
+    buyer: string,
+    token: string,
+    server: string,
+    channel: string,
+    modes: string[],
+}
 interface Secrets {
+    discords: DiscordConfig[];
     salali_tokens: string[];
     salali_frees: string[];
     channels: string[];
     channels_free: string[];
 }
+
+const secret: Secrets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+const paid = secret.discords.filter(discord => discord.modes.indexOf('paid') > -1);
+const free = secret.discords.filter(discord => discord.modes.indexOf('free') > -1);
 
 const secrets: Secrets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
@@ -18,19 +32,18 @@ const configs = {
     mongo: { mongodbUri },
     rabbitmq: {
         rabbitmqUri,
-        concurrent_consumers: 10,
+        concurrent_consumers: 9,
         timeout: 5 * 60 * 1000,
-        concurrent_consumers_free: 1,
+        concurrent_consumers_free: 3,
         timeout_free: 5 * 60 * 1000,
     },
     redis: { redisUri, task_expire: 60 * 15 },
     discord: {
-        salali_tokens: secrets.salali_tokens,
-        salali_frees: secrets.salali_frees,
-        channels: secrets.channels,
-        channels_free: secrets.channels_free,
+        dicords: secret.discords,
+        paid,
+        free,
     },
-    midjourney: { concurrent_tasks: 10, concurrent_tasks_free: 1, },
+    midjourney: { concurrent_tasks: 5, concurrent_tasks_free: 1, },
 }
 
 
