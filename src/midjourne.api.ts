@@ -67,7 +67,7 @@ export class MidjourneyApi extends Command {
       if (response.status >= 400) {
         console.error("api.error.config", {
           payload: JSON.stringify(payload),
-          config: this.config,
+          // config: this.config,
         });
       }
       return response.status;

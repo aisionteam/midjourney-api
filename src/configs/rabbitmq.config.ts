@@ -27,9 +27,14 @@ export async function consumeFromQueue(queue: string, concurrent: number, timeou
                     resolve();
                 }, timeout);
             });
-            await Promise.race([callback(msg.content.toString()), timeoutTimer]);
-            // await callback(msg.content.toString());
-            channel.ack(msg);
+            try {
+                await Promise.race([callback(msg.content.toString()), timeoutTimer]);
+                // await callback(msg.content.toString());
+                channel.ack(msg);
+            } catch (e) {
+                console.error(e);
+                channel.nack(msg);
+            }
         }
     });
 }

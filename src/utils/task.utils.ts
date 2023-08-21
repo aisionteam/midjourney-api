@@ -27,6 +27,14 @@ export const processTask = async (
     }
     task = foundtask;
 
+    const update_redis = (task: TaskInterface) => {
+        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
+            if (task.callback_url) {
+                axios.post(task.callback_url, task).catch(err => { console.error(err) });
+            }
+        });
+    }
+
     const update = (uri: string, percentage: string) => {
         redis.get(`${task.uuid}`).then((processingTask) => {
             // console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
@@ -36,11 +44,7 @@ export const processTask = async (
                 task.percentage = percentage;
                 task.temp_uri = processingTask ? [uri, ...JSON.parse(processingTask).temp_uri, uri] : [uri];
 
-                redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-                    if (task.callback_url) {
-                        axios.post(task.callback_url, task).catch(err => { console.error(err) });
-                    }
-                });
+                update_redis(task);
             }
         });
     };
@@ -48,11 +52,7 @@ export const processTask = async (
     try {
         await client.Connect();
         task.status = "waiting";
-        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-            if (task.callback_url) {
-                axios.post(task.callback_url, task).catch(err => { console.error(err) });
-            }
-        });
+        update_redis(task);
         let midAction: Promise<any>;
         switch (task.command) {
             case 'imagine':
@@ -102,11 +102,7 @@ export const processTask = async (
         }
         const result: any = await midAction.catch((err) => {
             task.error = err;
-            redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-                if (task.callback_url) {
-                    axios.post(task.callback_url, task).catch(err => { console.error(err) });
-                }
-            });
+            update_redis(task);
         });
 
         task.result = result ? result : {};
@@ -114,21 +110,10 @@ export const processTask = async (
         task.status = "completed";
         task.account = discordConfig?.name;
         await task.save();
-        // console.log(`task completed ${task.command} ${task.prompt.substring(0, 20)} ${task.uuid}`)
-        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-            if (task.callback_url) {
-                axios.post(task.callback_url, task).catch(err => { console.error(err) });
-            }
-        });
+        update_redis(task);
     } catch (err: any) {
         console.error(`task error ${task} -> ${err}`);
-        redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-            if (task.callback_url) {
-                axios.post(task.callback_url, task).catch(err => { console.error(err) });
-            }
-        }).catch((error) => {
-            console.error('Error setting key:', task.uuid, error);
-        });
+        update_redis(task);
         try {
             await task.save();
         } catch (err: any) { }

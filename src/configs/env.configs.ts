@@ -32,9 +32,9 @@ const configs = {
     mongo: { mongodbUri },
     rabbitmq: {
         rabbitmqUri,
-        concurrent_consumers: 9,
+        concurrent_consumers: 20,
         timeout: 5 * 60 * 1000,
-        concurrent_consumers_free: 3,
+        concurrent_consumers_free: 5,
         timeout_free: 5 * 60 * 1000,
     },
     redis: { redisUri, task_expire: 60 * 15 },
