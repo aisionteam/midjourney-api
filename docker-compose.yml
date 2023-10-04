@@ -33,6 +33,7 @@ services:
     image: rabbitmq:3-management
     env_file:
       - .env
+    restart: unless-stopped
     volumes:
       - rabbitmqdata:/var/lib/rabbitmq
     networks:
@@ -57,6 +58,7 @@ services:
     image: redis
     env_file:
       - .env
+    restart: unless-stopped
     networks:
       - app-net
     depends_on:
@@ -66,8 +68,9 @@ services:
     image: mongo
     env_file:
       - .env
+    restart: unless-stopped
     volumes:
-      - dbdata:/data/db
+      - ./db.data:/data/db
     networks:
       - app-net
       - mongo-net
