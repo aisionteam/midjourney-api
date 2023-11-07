@@ -43,7 +43,7 @@ const configs = {
         paid,
         free,
     },
-    midjourney: { concurrent_tasks: 5, concurrent_tasks_free: 1, },
+    midjourney: { concurrent_tasks: 2, concurrent_tasks_free: 1, },
 }
 
 

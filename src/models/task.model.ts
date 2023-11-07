@@ -56,7 +56,7 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             required: true,
             default: "initialized",
-            enum: ["initialized", "queue", "waiting", "running", "completed"],
+            enum: ["initialized", "queue", "waiting", "running", "completed", "error"],
         },
         error: {
             type: Object,

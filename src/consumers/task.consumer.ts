@@ -17,8 +17,11 @@ export async function startTaskReceiver() {
         } else {
             const req_prompt = JSON.parse(task.prompt);
             const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
-
-            discordConfig = configs.discord.dicords.filter((config) => config.name === req_task.account)[0];
+            try {
+                discordConfig = configs.discord.dicords.filter((config) => config.name === req_task.account)[0];
+            } catch (error) {
+                discordConfig = getRandomChoice(configs.discord.paid);
+            }
         }
         // console.log(token)
         return await processTask(task, discordConfig);

@@ -26,6 +26,8 @@ export const processTask = async (
         return;
     }
     task = foundtask;
+    task.account = discordConfig?.name;
+    await task.save();
 
     const update_redis = (task: TaskInterface) => {
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
@@ -97,13 +99,12 @@ export const processTask = async (
                     loading: update,
                 }).catch((err) => { throw err });
                 break;
+            case 'faceswap':
+                throw new Error('Invalid value of t');
             default:
                 throw new Error('Invalid value of t');
         }
-        const result: any = await midAction.catch((err) => {
-            task.error = err;
-            update_redis(task);
-        });
+        const result: any = await midAction.catch((err) => { throw err });
 
         task.result = result ? result : {};
         task.percentage = "100%";
@@ -113,10 +114,13 @@ export const processTask = async (
         update_redis(task);
     } catch (err: any) {
         console.error(`task error ${task} -> ${err}`);
-        update_redis(task);
         try {
+            task.status = "error";
+            task.error = err;
+            update_redis(task);    
             await task.save();
-        } catch (err: any) { }
+
+        } catch (err: any) { console.error(`task save error ${task} -> ${err}`); }
         return;
     }
 };

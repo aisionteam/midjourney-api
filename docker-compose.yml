@@ -1,4 +1,4 @@
-version: "3"
+version: "3z"
 
 services:
   app:
@@ -10,7 +10,10 @@ services:
     ports:
       - "9229:9229"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - .:/app
     networks:
@@ -51,21 +54,29 @@ services:
       - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.service=${PROJECT_RABBITMQ}"
       - "traefik.http.services.${PROJECT_RABBITMQ}.loadbalancer.server.port=15672"
       - "traefik.docker.network=traefik-net"
-    depends_on:
-      - mongodb
 
   redis:
     image: redis
     env_file:
       - .env
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - app-net
-    depends_on:
-      - mongodb
 
   mongodb:
     image: mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongodb:27017/test --quiet
+      # test: echo 'db.runCommand("ping").ok' | mongo mongodb:27017/test --quiet 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     env_file:
       - .env
     restart: unless-stopped
@@ -103,7 +114,8 @@ services:
       - traefik-net
       - mongo-net
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
 volumes:
   dbdata:
