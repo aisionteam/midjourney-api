@@ -100,7 +100,9 @@ export const processTask = async (
                 }).catch((err) => { throw err });
                 break;
             case 'faceswap':
-                throw new Error('Invalid value of t');
+                const req_prompt_f = JSON.parse(task.prompt);
+                midAction = client.FaceSwap(req_prompt_f.target, req_prompt_f.source);
+                break;
             default:
                 throw new Error('Invalid value of t');
         }

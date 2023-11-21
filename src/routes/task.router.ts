@@ -22,6 +22,7 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     const prompt_req = req.body.prompt ? req.body.prompt : '';
     const command = req.body.command ? req.body.command : 'imagine';
     const free = req.body.free ? req.body.free : false;
+    const sender_data = req.body.sender_data ? req.body.sender_data : undefined;
     const callback_url = req.body.callback ? req.body.callback : undefined;
     const prompt = prompt_req.replace(/--relax/gm, "").replace(/--turbo/gm, "").replace(/--fast/gm, "") + ((free && command == "imagine") ? " --relax" : "");
     const user: UserInterface = req.user;
@@ -32,6 +33,7 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
         free,
         callback_url,
         status: "queue",
+        sender_data,
     });
 
     await newTask.save();

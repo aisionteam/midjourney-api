@@ -18,6 +18,7 @@ export interface TaskInterface extends BaseDocumentInterface {
     turn?: number,
     temp_uri: string[],
     account?: string,
+    sender_data?: Object,
 }
 
 const TaskSchema = new BaseDocumentSchema(
@@ -38,7 +39,7 @@ const TaskSchema = new BaseDocumentSchema(
             type: String,
             required: true,
             default: "imagine",
-            enum: ["imagine", "describe", "variation", "upscale", "zoomout"],
+            enum: ["imagine", "describe", "variation", "upscale", "zoomout", "faceswap"],
         },
         callback_url: {
             type: String,
@@ -80,6 +81,10 @@ const TaskSchema = new BaseDocumentSchema(
         },
         account: {
             type: String,
+            trim: true,
+        },
+        sender_data: {
+            type: Object,
             trim: true,
         },
     },
