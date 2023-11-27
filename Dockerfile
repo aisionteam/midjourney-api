@@ -1,4 +1,4 @@
-FROM node:alpine
+FROM node:lts-alpine
 
 RUN mkdir -p /app && chown -R node:node /app
 
@@ -8,7 +8,7 @@ COPY package.json ./
 
 USER node
 
-RUN npm install --only=production 
+RUN npm install --omit=dev
 
 # COPY --chown=node:node . .
 
