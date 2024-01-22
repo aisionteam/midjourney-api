@@ -7,8 +7,8 @@ services:
     env_file:
       - .env
     restart: always
-    ports:
-      - "9229:9229"
+    #ports:
+    #  - "9229:9229"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
       - "traefik.docker.network=traefik-net"
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:management-alpine
     env_file:
       - .env
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
       - "traefik.docker.network=traefik-net"
 
   redis:
-    image: redis
+    image: redis:alpine
     env_file:
       - .env
     healthcheck:
