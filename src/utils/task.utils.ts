@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 import Task, { TaskInterface } from "../models/task.model";
-import { Midjourney } from "..";
+// import { Midjourney } from "..";
+import { Midjourney } from "freezer-midjourney-api";
 import { redisClient as redis } from "../configs/redis.config";
 import configs, { DiscordConfig } from "../configs/env.configs";
-import { env } from 'process';
 
 
 export const processTask = async (
