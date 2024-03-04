@@ -4,15 +4,30 @@ services:
   app:
     build: .
     command: npm start
+    restart: unless-stopped
     env_file:
       - .env
-    restart: always
-    #ports:
-    #  - "9229:9229"
     depends_on:
+      redis:
+        condition: service_healthy
       mongodb:
         condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - traefik-net
+      - app-net
+
+  web:
+    build: .
+    command: npm run startWeb
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     volumes:
       - .:/app
@@ -32,29 +47,6 @@ services:
       - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=3000"
       - "traefik.docker.network=traefik-net"
 
-  rabbitmq:
-    image: rabbitmq:management-alpine
-    env_file:
-      - .env
-    restart: unless-stopped
-    volumes:
-      - rabbitmqdata:/var/lib/rabbitmq
-    networks:
-      - app-net
-      - traefik-net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}.entrypoints=web"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}.rule=Host(`${PROJECT_RABBITMQ}.bot.inbeet.tech`)"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}.middlewares=https-redirect"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.entrypoints=websecure"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.rule=Host(`${PROJECT_RABBITMQ}.bot.inbeet.tech`)"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.tls=true"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${PROJECT_RABBITMQ}-secure.service=${PROJECT_RABBITMQ}"
-      - "traefik.http.services.${PROJECT_RABBITMQ}.loadbalancer.server.port=15672"
-      - "traefik.docker.network=traefik-net"
-
   redis:
     image: redis:alpine
     env_file:
@@ -68,6 +60,7 @@ services:
     networks:
       - app-net
 
+  
   mongodb:
     image: mongo
     healthcheck:
@@ -84,8 +77,6 @@ services:
       - ./db.data:/data/db
     networks:
       - app-net
-      - mongo-net
-
   mongo-express:
     image: mongo-express
     restart: unless-stopped
@@ -112,18 +103,12 @@ services:
       - "traefik.docker.network=traefik-net"
     networks:
       - traefik-net
-      - mongo-net
+      - app-net
     depends_on:
       mongodb:
         condition: service_healthy
 
-volumes:
-  dbdata:
-  rabbitmqdata:
-
-
 networks:
   app-net:
-  mongo-net:
   traefik-net:
     external: true

@@ -30,7 +30,9 @@ export const processTask = async (
     await task.save();
 
     const update_redis = (task: TaskInterface) => {
+        console.log(`update_redis on ${task.command} ${task.prompt.substring(0, 20)} ${task.percentage} ${task.status}`)
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
+            console.log(`redis has set key ${task.uuid}`)
             if (task.callback_url) {
                 axios.post(task.callback_url, task).catch(err => { console.error(err) });
             }
@@ -38,7 +40,7 @@ export const processTask = async (
     }
 
     const update = (uri: string, percentage: string) => {
-        redis.get(`${task.uuid}`).then((processingTask) => {
+        redis.get(`${task.uuid}`).then(processingTask => {
             // console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
             const currentPercent = parseInt((processingTask ? JSON.parse(processingTask).percentage : undefined) || "0");
             if (parseInt(percentage) > currentPercent) {
@@ -53,6 +55,17 @@ export const processTask = async (
 
     try {
         await client.Connect();
+        new Promise<void>((resolve, reject) => {
+            setTimeout(() => {
+                if (task.status === "completed" || task.status === "error") {
+                    resolve();
+                } else {
+                    client.Close()
+                    throw new Error('timeout');
+                    reject();
+                }
+            }, configs.midjourney.timeout * 1000)
+        });
         task.status = "waiting";
         update_redis(task);
         let midAction: Promise<any>;
@@ -119,7 +132,7 @@ export const processTask = async (
         try {
             task.status = "error";
             task.error = err;
-            update_redis(task);    
+            update_redis(task);
             await task.save();
 
         } catch (err: any) { console.error(`task save error ${task} -> ${err}`); }

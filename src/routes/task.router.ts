@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import configs from '../configs/env.configs';
 import { redisClient as redis } from '../configs/redis.config';
-import { sendToQueue } from '../configs/rabbitmq.config';
 import Task, { TaskInterface } from '../models/task.model';
 import User, { UserInterface } from '../models/user.model';
 import { AuthenticatedRequest, authenticateToken } from "../middlewares/auth.middlewares"
@@ -37,7 +36,8 @@ router.post("/", authenticateToken, async (req: any, res: Response) => {
     });
 
     await newTask.save();
-    const turn = await sendToQueue(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
+    // const turn = await sendToQueue(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
+    const turn = await redis.rpush(free ? "free_tasks" : "tasks", JSON.stringify(newTask));
     newTask.turn = turn;
     redis.set(`${newTask.uuid}`, JSON.stringify(newTask), 'EX', configs.redis.task_expire).then(() => {
         if (newTask.callback_url) {

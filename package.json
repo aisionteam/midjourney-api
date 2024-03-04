@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "create": "npx tsx src/scripts/create.ts",
-    "start": "npx tsx src/main.ts",
+    "start": "npx tsx src/app.ts",
+    "startWeb": "npx tsx src/main.ts",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
     "example:imagine": "tsx ./examples/imagine-ws.ts"
@@ -47,7 +48,7 @@
     "dotenv": "^16.0.3",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
-    "tsx": "^3.12.7",
+    "tsx": "^4.7.1",
     "typescript": "^5.0.4"
   },
   "dependencies": {
