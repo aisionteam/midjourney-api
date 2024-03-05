@@ -5,7 +5,30 @@ import Task, { TaskInterface } from "../models/task.model";
 import { Midjourney } from "freezer-midjourney-api";
 import { redisClient as redis } from "../configs/redis.config";
 import configs, { DiscordConfig } from "../configs/env.configs";
+import { getRandomChoice } from '../utils/random.utils';
 
+
+export const processor = async (msg: string) => {
+    const task = JSON.parse(msg);
+    let discordConfig: DiscordConfig | undefined;
+    if (task.command === "imagine" || task.command === "describe") {
+        if (task.free) {
+            discordConfig = getRandomChoice(configs.discord.free);
+        } else {
+            discordConfig = getRandomChoice(configs.discord.paid);
+        }
+    } else {
+        const req_prompt = JSON.parse(task.prompt);
+        const req_task: any = (await Task.findOne({ uuid: req_prompt.taskId }).lean())
+        try {
+            discordConfig = configs.discord.dicords.filter((config) => config.name === req_task.account)[0];
+        } catch (error) {
+            discordConfig = getRandomChoice(configs.discord.paid);
+        }
+    }
+    // console.log(token)
+    return await processTask(task, discordConfig);
+};
 
 export const processTask = async (
     task: TaskInterface,
@@ -30,18 +53,15 @@ export const processTask = async (
     await task.save();
 
     const update_redis = (task: TaskInterface) => {
-        console.log(`update_redis on ${task.command} ${task.prompt.substring(0, 20)} ${task.percentage} ${task.status}`)
         redis.set(`${task.uuid}`, JSON.stringify(task), 'EX', configs.redis.task_expire).then(() => {
-            console.log(`redis has set key ${task.uuid}`)
             if (task.callback_url) {
                 axios.post(task.callback_url, task).catch(err => { console.error(err) });
             }
-        });
+        }).catch(err => { console.error(err) });
     }
 
     const update = (uri: string, percentage: string) => {
         redis.get(`${task.uuid}`).then(processingTask => {
-            // console.log(`updatde on ${task.command} ${task.prompt.substring(0, 20)} ${uri} ${percentage} ${task.percentage} ${task.status}`)
             const currentPercent = parseInt((processingTask ? JSON.parse(processingTask).percentage : undefined) || "0");
             if (parseInt(percentage) > currentPercent) {
                 task.status = "running";
@@ -55,19 +75,22 @@ export const processTask = async (
 
     try {
         await client.Connect();
-        new Promise<void>((resolve, reject) => {
+        const timeoutPromise = new Promise<void>((resolve, reject) => {
             setTimeout(() => {
                 if (task.status === "completed" || task.status === "error") {
                     resolve();
                 } else {
                     client.Close()
-                    throw new Error('timeout');
-                    reject();
+                    console.error(`timeout on task ${task.uuid}`);
+                    reject(new Error(`timeout on task ${task.uuid}`));
                 }
             }, configs.midjourney.timeout * 1000)
+            // }, 5 * 1000)
         });
         task.status = "waiting";
         update_redis(task);
+
+
         let midAction: Promise<any>;
         switch (task.command) {
             case 'imagine':
@@ -119,7 +142,7 @@ export const processTask = async (
             default:
                 throw new Error('Invalid value of t');
         }
-        const result: any = await midAction.catch((err) => { throw err });
+        const result: any = await Promise.race([timeoutPromise.catch((err) => { throw err }), midAction.catch((err) => { throw err })])
 
         task.result = result ? result : {};
         task.percentage = "100%";

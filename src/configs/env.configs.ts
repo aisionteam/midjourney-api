@@ -25,18 +25,10 @@ const free = secret.discords.filter(discord => discord.modes.indexOf('free') > -
 const secrets: Secrets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
 const mongodbUri = process.env.MONGODB_URL ? process.env.MONGODB_URL : 'mongodb://localhost:27017';
-const rabbitmqUri = process.env.RABBITMQ_URL ? process.env.RABBITMQ_URL : 'amqp://localhost:5672';
-const redisUri = 'redis';
+const redisUri = process.env.REDIS_URL ? process.env.REDIS_URL : 'redis';
 
 const configs = {
     mongo: { mongodbUri },
-    rabbitmq: {
-        rabbitmqUri,
-        concurrent_consumers: 20,
-        timeout: 5 * 60 * 1000,
-        concurrent_consumers_free: 5,
-        timeout_free: 5 * 60 * 1000,
-    },
     redis: { redisUri, task_expire: 60 * 15 },
     discord: {
         dicords: secret.discords,

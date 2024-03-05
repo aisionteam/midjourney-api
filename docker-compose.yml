@@ -15,7 +15,6 @@ services:
     volumes:
       - .:/app
     networks:
-      - traefik-net
       - app-net
 
   web:
@@ -60,7 +59,6 @@ services:
     networks:
       - app-net
 
-  
   mongodb:
     image: mongo
     healthcheck:
@@ -77,36 +75,36 @@ services:
       - ./db.data:/data/db
     networks:
       - app-net
-  mongo-express:
-    image: mongo-express
-    restart: unless-stopped
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: "27017"
-      # ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      # ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      # ports:
-      #   - "8081:8081"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.${PROJECT_DB}.entrypoints=web"
-      - "traefik.http.routers.${PROJECT_DB}.rule=Host(`${PROJECT_DB}.bot.inbeet.tech`)"
-      - "traefik.http.routers.${PROJECT_DB}.middlewares=https-redirect"
-      - "traefik.http.routers.${PROJECT_DB}-secure.entrypoints=websecure"
-      - "traefik.http.routers.${PROJECT_DB}-secure.rule=Host(`${PROJECT_DB}.bot.inbeet.tech`)"
-      - "traefik.http.routers.${PROJECT_DB}-secure.tls=true"
-      - "traefik.http.routers.${PROJECT_DB}-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${PROJECT_DB}-secure.service=${PROJECT_DB}"
-      - "traefik.http.routers.${PROJECT_DB}-secure.middlewares=${PROJECT_DB}-auth"
-      - "traefik.http.middlewares.${PROJECT_DB}-auth.basicauth.users=mjs:$$2y$$05$$MIvU1G1bSBgQUrWBugCLVOQUxMGJxmq4pGX/6I54P2QN1iyQaIJsK"
-      - "traefik.http.services.${PROJECT_DB}.loadbalancer.server.port=8081"
-      - "traefik.docker.network=traefik-net"
-    networks:
-      - traefik-net
-      - app-net
-    depends_on:
-      mongodb:
-        condition: service_healthy
+  # mongo-express:
+  #   image: mongo-express
+  #   restart: unless-stopped
+  #   environment:
+  #     ME_CONFIG_MONGODB_SERVER: mongodb
+  #     ME_CONFIG_MONGODB_PORT: "27017"
+  #     # ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+  #     # ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+  #     # ports:
+  #     #   - "8081:8081"
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.${PROJECT_DB}.entrypoints=web"
+  #     - "traefik.http.routers.${PROJECT_DB}.rule=Host(`${PROJECT_DB}.bot.inbeet.tech`)"
+  #     - "traefik.http.routers.${PROJECT_DB}.middlewares=https-redirect"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.entrypoints=websecure"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.rule=Host(`${PROJECT_DB}.bot.inbeet.tech`)"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.tls=true"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.service=${PROJECT_DB}"
+  #     - "traefik.http.routers.${PROJECT_DB}-secure.middlewares=${PROJECT_DB}-auth"
+  #     - "traefik.http.middlewares.${PROJECT_DB}-auth.basicauth.users=mjs:$$2y$$05$$MIvU1G1bSBgQUrWBugCLVOQUxMGJxmq4pGX/6I54P2QN1iyQaIJsK"
+  #     - "traefik.http.services.${PROJECT_DB}.loadbalancer.server.port=8081"
+  #     - "traefik.docker.network=traefik-net"
+  #   networks:
+  #     - traefik-net
+  #     - app-net
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
 
 networks:
   app-net:
