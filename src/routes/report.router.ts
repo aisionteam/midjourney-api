@@ -1,6 +1,7 @@
 import User from '../models/user.model';
 import Task from '../models/task.model';
 import express from 'express';
+import config from '../configs/env.configs';
 import { redisClient as redis } from "../configs/redis.config";
 
 
@@ -8,6 +9,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     const data = {
+        configs: config.midjourney,
         users: await User.find().count(),
         tasks_queue_len: await redis.llen("tasks"),
         free_tasks_queue_len: await redis.llen("free_tasks"),
