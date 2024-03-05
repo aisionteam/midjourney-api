@@ -1,5 +1,6 @@
 import { DiscordImage, MJConfig } from "./interfaces";
-
+import async from "async";
+import { sleep } from "./utils";
 export const Commands = [
   "ask",
   "blend",
@@ -35,21 +36,20 @@ export class Command {
     if (this.cache[name] !== undefined) {
       return this.cache[name];
     }
-    if (this.config.ServerId) {
-      const command = await this.getCommand(name);
-      this.cache[name] = command;
-      return command;
-    }
+    const command = await this.getCommand(name);
+    console.log("=========", { command });
+    this.cache[name] = command;
+    return command;
     this.allCommand();
     return this.cache[name];
   }
   async allCommand() {
-    const searchParams = new URLSearchParams({
-      type: "1",
-      include_applications: "true",
-    });
-    const url = `${this.config.DiscordBaseUrl}/api/v9/guilds/${this.config.ServerId}/application-command-index`;
-    const response = await this.config.fetch(url, {
+    let serverId = this.config.ServerId;
+    if (!serverId) {
+      serverId = this.config.ChannelId;
+    }
+    const url = `${this.config.DiscordBaseUrl}/api/v9/guilds/${serverId}/application-command-index`;
+    const response = await this.safeFetch(url, {
       headers: { authorization: this.config.SalaiToken },
     });
 
@@ -65,15 +65,12 @@ export class Command {
   }
 
   async getCommand(name: CommandName) {
-    const searchParams = new URLSearchParams({
-      type: "1",
-      query: name,
-      limit: "1",
-      include_applications: "true",
-      // command_ids: `${this.config.BotId}`,
-    });
-    const url = `${this.config.DiscordBaseUrl}/api/v9/channels/${this.config.ChannelId}/application-commands/search?${searchParams}`;
-    const response = await this.config.fetch(url, {
+    let serverId = this.config.ServerId;
+    if (!serverId) {
+      serverId = this.config.ChannelId;
+    }
+    const url = `${this.config.DiscordBaseUrl}/api/v9/guilds/${serverId}/application-command-index`;
+    const response = await this.safeFetch(url, {
       headers: { authorization: this.config.SalaiToken },
     });
     const data = await response.json();
@@ -82,6 +79,39 @@ export class Command {
     }
     throw new Error(`Failed to get application_commands for command ${name}`);
   }
+  private safeFetch(input: RequestInfo | URL, init?: RequestInit | undefined) {
+    const request = this.config.fetch.bind(this, input, init);
+    return new Promise<Response>((resolve, reject) => {
+      this.fetchQueue.push(
+        {
+          request,
+          callback: (res: Response) => {
+            resolve(res);
+          },
+        },
+        (error: any, result: any) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+  }
+  private async processFetchRequest({
+    request,
+    callback,
+  }: {
+    request: () => Promise<Response>;
+    callback: (res: Response) => void;
+  }) {
+    const res = await request();
+    callback(res);
+    await sleep(1000 * 4);
+  }
+  private fetchQueue = async.queue(this.processFetchRequest, 1);
+
   async imaginePayload(prompt: string, nonce?: string) {
     const data = await this.commandData("imagine", [
       {
