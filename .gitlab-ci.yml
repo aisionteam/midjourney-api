@@ -1,0 +1,70 @@
+
+
+stages:
+  - build
+  - test
+  - publish-image
+  - deploy
+  - post-deploy
+
+
+variables:
+  IMAGE_TAG: $CI_PIPELINE_ID-$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA
+  PEGAH_REGISTRY_IMAGE_URL: $PEGAH_REGISTRY_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_ID-$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA
+  MEDIAAD_REGISTRY_IMAGE_URL: $HETZNER_REGISTRY_URL/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_ID-$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA
+
+
+publish-image-to-pegah-registry:
+  stage: publish-image
+  image: docker:20
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == "stage"
+      when: on_success
+    - when: never
+  variables:
+    GIT_STRATEGY: fetch
+  dependencies: []
+  before_script:
+    - docker login $PEGAH_REGISTRY_URL -u $PEGAH_REGISTRY_USERNAME -p $PEGAH_REGISTRY_PASSWORD
+    - echo pushing image $PEGAH_REGISTRY_IMAGE_URL to Pegah registry
+  script:
+    - docker build --tag $PEGAH_REGISTRY_IMAGE_URL .
+    - docker image push $PEGAH_REGISTRY_IMAGE_URL
+    - docker image rm $PEGAH_REGISTRY_IMAGE_URL
+
+
+deploy-staging:
+  stage: deploy
+  image: reg.pegah.tech/infra/python-infra:v1
+  rules:
+    - if: $CI_COMMIT_BRANCH == "stage"
+      when: on_success
+    - when: never
+  variables:
+    GIT_STRATEGY: none
+    K8S_DEPLOYER_TOKEN: $K8S_DEPLOYER_TOKEN
+  dependencies: []
+  script:
+    - python $K8S_DEPLOYER -n stg-$CI_PROJECT_NAMESPACE -d $CI_PROJECT_NAME -c $CI_PROJECT_NAME
+      -i $CI_PROJECT_NAME -t $IMAGE_TAG -b $CI_COMMIT_BRANCH -r $CI_PROJECT_NAMESPACE
+      -p $CI_PROJECT_PATH -m "$CI_COMMIT_MESSAGE" -u $GITLAB_USER_LOGIN -l Staging
+
+
+deploy-production:
+  stage: deploy
+  image: reg.pegah.tech/infra/python-infra:v1
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+    - when: never
+  variables:
+    GIT_STRATEGY: none
+    K8S_DEPLOYER_TOKEN: $K8S_DEPLOYER_TOKEN
+  script:
+    - python $K8S_DEPLOYER -n $CI_PROJECT_NAMESPACE -d $CI_PROJECT_NAME  -c $CI_PROJECT_NAME
+      -i $CI_PROJECT_NAME -t $IMAGE_TAG -b $CI_COMMIT_BRANCH -r $CI_PROJECT_NAMESPACE
+      -p $CI_PROJECT_PATH -m "$CI_COMMIT_MESSAGE" -u $GITLAB_USER_LOGIN -l Production
+
+
