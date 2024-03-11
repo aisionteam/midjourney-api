@@ -136,4 +136,5 @@ libs
 
 secrets.json
 *.data
+*.bk
 info.txt
