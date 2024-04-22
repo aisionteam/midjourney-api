@@ -34,10 +34,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.${PROJECT_NAME}.entrypoints=web"
-      - "traefik.http.routers.${PROJECT_NAME}.rule=Host(`${PROJECT_NAME}.bot.inbeet.tech`)"
+      - "traefik.http.routers.${PROJECT_NAME}.rule=Host(`${DOMAIN}`, `${PROJECT_NAME}.bot.inbeet.tech`)"
       - "traefik.http.routers.${PROJECT_NAME}.middlewares=https-redirect"
       - "traefik.http.routers.${PROJECT_NAME}-secure.entrypoints=websecure"
-      - "traefik.http.routers.${PROJECT_NAME}-secure.rule=Host(`${PROJECT_NAME}.bot.inbeet.tech`)"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.rule=Host(`${DOMAIN}`, `${PROJECT_NAME}.bot.inbeet.tech`)"
       - "traefik.http.routers.${PROJECT_NAME}-secure.tls=true"
       - "traefik.http.routers.${PROJECT_NAME}-secure.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${PROJECT_NAME}-secure.service=${PROJECT_NAME}"
