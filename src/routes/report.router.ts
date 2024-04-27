@@ -21,6 +21,8 @@ router.get("/", async (req, res) => {
         daily_failed_tasks: await Task.find({ status: "error", createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }).count(),
     };
 
+    console.log(req.ip, 'GET /report');
+
     res.json(data);
 });
 

@@ -24,6 +24,7 @@ const free = secret.discords.filter(discord => discord.modes.indexOf('free') > -
 
 const mongodbUri = process.env.MONGODB_URL ? process.env.MONGODB_URL : 'mongodb://localhost:27017';
 const redisUri = process.env.REDIS_URL ? process.env.REDIS_URL : 'redis';
+const proxy = process.env.proxy || '';
 
 const configs = {
     mongo: { mongodbUri },
@@ -34,6 +35,7 @@ const configs = {
         free,
     },
     midjourney: { concurrent_tasks: paid.length, concurrent_tasks_free: free.length, timeout: 5 * 60, },
+    proxy,
 }
 
 

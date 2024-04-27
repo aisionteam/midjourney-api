@@ -1,6 +1,6 @@
 import configs from "./configs/env.configs";
-// import { Midjourney } from ".";
-import { Midjourney } from "freezer-midjourney-api";
+import { Midjourney } from ".";
+// import { Midjourney } from "freezer-midjourney-api";
 
 let all_info: any[] = [];
 

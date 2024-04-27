@@ -7,7 +7,7 @@ import { redisClient as redis } from "./configs/redis.config";
 import authRouter from "./routes/auth.router";
 import taskRouter from "./routes/task.router";
 import reportRouter from "./routes/report.router";
-import { startTaskReceiver } from "./consumers/task.consumer";
+// import { startTaskReceiver } from "./consumers/task.consumer";
 
 (async () => {
   await mongoConn;

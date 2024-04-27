@@ -1,4 +1,5 @@
 import WebSocket from "isomorphic-ws";
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 export type FetchFn = typeof fetch;
 export type WebSocketCl = typeof WebSocket;
@@ -22,7 +23,9 @@ export interface MJConfig {
   ApiInterval: number;
   WebSocket: WebSocketCl;
   ImageProxy: string;
+  agent: HttpsProxyAgent<any | null> | null;
 }
+
 export interface MJConfigParam {
   SalaiToken: string; //DISCORD_TOKEN
   ChannelId?: string; //DISCORD_CHANNEL_ID
@@ -41,6 +44,7 @@ export interface MJConfigParam {
   WsBaseUrl?: string;
   fetch?: FetchFn; //Node.js<18 need node.fetch Or proxy
   WebSocket?: WebSocketCl; //isomorphic-ws Or proxy
+  agent?: HttpsProxyAgent<any | null> | null; //HttpsProxyAgent Or proxy
 }
 
 export const DefaultMJConfig: MJConfig = {
@@ -58,4 +62,5 @@ export const DefaultMJConfig: MJConfig = {
   WsBaseUrl: "wss://gateway.discord.gg/?encoding=json&v=9",
   fetch: fetch,
   WebSocket: WebSocket,
+  agent: null,
 };

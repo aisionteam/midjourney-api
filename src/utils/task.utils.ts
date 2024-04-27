@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+import WebSocket from 'isomorphic-ws';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import Task, { TaskInterface } from "../models/task.model";
-// import { Midjourney } from "..";
-import { Midjourney } from "freezer-midjourney-api";
+import { Midjourney } from "..";
+// import { Midjourney } from "freezer-midjourney-api";
 import { redisClient as redis } from "../configs/redis.config";
 import configs, { DiscordConfig } from "../configs/env.configs";
 import { getRandomChoice } from '../utils/random.utils';
@@ -34,6 +36,8 @@ export const processTask = async (
     task: TaskInterface,
     discordConfig: DiscordConfig | undefined = undefined,
 ) => {
+    const agent = new HttpsProxyAgent(configs.proxy);
+
     const client = new Midjourney({
         ServerId: discordConfig ? <string>discordConfig.server : <string>process.env.SERVER_ID,
         ChannelId: discordConfig ? <string>discordConfig.channel : <string>process.env.CHANNEL_ID,
@@ -41,6 +45,7 @@ export const processTask = async (
         HuggingFaceToken: <string>process.env.HUGGINGFACE_TOKEN,
         Debug: false,
         Ws: true,
+        agent: agent,
     });
 
     const foundtask = await Task.findOne({ uuid: task.uuid });

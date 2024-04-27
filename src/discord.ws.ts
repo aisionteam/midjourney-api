@@ -34,7 +34,11 @@ export class WsMessage {
   private heartbeatInterval = 0;
   public UserId = "";
   constructor(public config: MJConfig, public MJApi: MidjourneyApi) {
-    this.ws = new this.config.WebSocket(this.config.WsBaseUrl);
+    if (config.agent) {
+      this.ws = new this.config.WebSocket(this.config.WsBaseUrl, { agent: config.agent });
+    }
+    else { this.ws = new this.config.WebSocket(this.config.WsBaseUrl); }
+
     this.ws.addEventListener("open", this.open.bind(this));
     this.onSystem("messageCreate", this.onMessageCreate.bind(this));
     this.onSystem("messageUpdate", this.onMessageUpdate.bind(this));
